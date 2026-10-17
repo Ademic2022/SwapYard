@@ -287,7 +287,8 @@ function PlaceBar(props: {
   if (props.place.city && !cities.some((c) => c.city === props.place.city)) {
     cities.unshift({ country: "", state: props.place.state, city: props.place.city, count: 0 });
   }
-  const select = "rounded-full border border-ink-200 bg-ink-50 px-3 py-1.5 text-sm font-medium text-ink-900";
+  const select =
+    "cursor-pointer appearance-none rounded-full border border-ink-200 bg-ink-50 px-4 py-1.5 text-sm font-medium text-ink-900 hover:border-ink-300";
 
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-ink-500">
@@ -307,7 +308,7 @@ function PlaceBar(props: {
       </select>
       {props.place.state && (
         <select
-          aria-label="City or LGA"
+          aria-label="LGA"
           className={select}
           value={props.place.city}
           onChange={(e) => props.onChoose({ state: props.place.state, city: e.target.value })}

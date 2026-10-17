@@ -1,12 +1,62 @@
 # SwapYard
 
-SwapYard is a hyper-local neighborhood marketplace. People discover tools to borrow, skills to trade and secondhand items to buy from neighbors nearby, then connect instantly on WhatsApp. No middlemen, just community commerce made simple.
+**SwapYard** is a hyper-local marketplace for Nigerian neighborhoods. Residents find tools to borrow, skills to trade and secondhand items to buy from people nearby, then connect instantly on WhatsApp. No middlemen, just community commerce made simple.
 
-This is the mobile-first web app: Next.js 16 (App Router, Cache Components), TypeScript, Tailwind CSS v4, urql and GraphQL Code Generator. It talks to [SwapYard-server](https://github.com/Ademic2022/SwapYard-server).
+This repository holds the web app: a mobile-first Next.js site built for mid-range Android phones and slow connections. The API lives in [SwapYard-server](https://github.com/Ademic2022/SwapYard-server).
 
-## Local development
+---
 
-Start the API first (see the server README), then:
+## Contents
+
+- [Features](#features)
+- [Tech stack](#tech-stack)
+- [Getting started](#getting-started)
+- [Configuration](#configuration)
+- [Scripts](#scripts)
+- [Project structure](#project-structure)
+- [How it works](#how-it-works)
+- [Design system](#design-system)
+- [Quality bar](#quality-bar)
+- [Deployment](#deployment)
+- [Contributing](#contributing)
+
+## Features
+
+- **Discover nearby:**
+  - Category tiles, keyword search, and state and LGA filters built from where listings actually exist.
+  - Nearest-first sorting when your location is known, plus price, condition, free-only and radius filters.
+- **Post in two minutes:** guided form for Buy & Sell, Borrow and Skills. Photos are compressed on the phone before upload, and a live preview shows the card.
+- **Chat on WhatsApp:**
+  - One tap opens WhatsApp in a new tab, with the listing already mentioned in the message.
+  - Safety tips show before your first chat.
+- **Shareable listings:** server-rendered Open Graph tags, so links preview with photo, title and price when forwarded in WhatsApp groups.
+- **Passwordless sign-in:** email magic links, then a short setup: name, location (detected or picked from the official state and LGA lists) and an optional WhatsApp number.
+- **Trust loop:** "Did it go through?" prompts, two-way ratings, verification badges, and report flows on listings and profiles.
+- **Your account:** manage listings (reserve, mark done, renew, edit, delete), profile, location, sign out and full account deletion.
+
+## Tech stack
+
+| | |
+|---|---|
+| Framework | [Next.js 16](https://nextjs.org/) App Router, with Cache Components and Partial Prefetching |
+| Language | TypeScript (strict) |
+| UI | React 19, Tailwind CSS v4, Fraunces and Instrument Sans via `next/font` |
+| Data | [urql](https://formidable.com/open-source/urql/) GraphQL client with multipart uploads |
+| Types | [GraphQL Code Generator](https://the-guild.dev/graphql/codegen) client preset, generated from the API schema |
+| Lint | ESLint with `eslint-config-next` |
+
+## Getting started
+
+### Prerequisites
+
+- Node.js 20 or newer
+- The API running locally (see [SwapYard-server](https://github.com/Ademic2022/SwapYard-server))
+
+### Quick start
+
+From the parent folder, `./start.sh --seed` starts the API and this app together, with demo data.
+
+To run the web app on its own:
 
 ```sh
 npm install
@@ -14,36 +64,114 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Open http://localhost:3000. In development, sign-in links print in the Django console.
+Open http://localhost:3000. Sign-in links print in the API's console in development.
 
-Next.js rewrites `/graphql`, `/api/csrf` and `/media/*` to Django. The browser only sees one origin, so the session cookie is first-party and no CORS setup is needed.
+## Configuration
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `NEXT_PUBLIC_SITE_URL` | `http://localhost:3000` | Public origin, used for absolute Open Graph URLs |
+| `API_INTERNAL_URL` | `http://127.0.0.1:8000` | Where the Next.js server reaches Django: server-rendered queries and the forwarded `/graphql`, `/api/csrf`, `/media` |
+| `API_PROXY_SECRET` | unset | Shared with Django. Lets it trust the visitor IP this site forwards, for rate limiting. Set in production |
+| `NEXT_PUBLIC_GRAPHQL_URL` | `/graphql` | GraphQL endpoint used by the browser |
+| `NEXT_PUBLIC_CSRF_URL` | `/api/csrf` | Endpoint that sets the CSRF cookie |
+| `GRAPHQL_SCHEMA` | `../SwapYard-server/schema.graphql` | Schema used by `npm run codegen` |
 
 ## Scripts
 
-| Command | What it does |
+| Command | |
 |---|---|
-| `npm run dev` | Dev server |
-| `npm run build` / `npm start` | Production build / server |
-| `npm run codegen` | Regenerate `src/gql/` from `../SwapYard-server/schema.graphql` |
+| `npm run dev` | Development server |
+| `npm run build` | Production build (type-checks and prerenders) |
+| `npm start` | Serve the production build |
+| `npm run codegen` | Regenerate `src/gql/` from the API schema |
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run lint` | ESLint |
 
-GraphQL documents live in `src/lib/documents.ts`. After editing them, or after the server schema changes, run `npm run codegen`.
+## Project structure
 
-## Pages
+```
+src/
+  app/                    Routes
+    page.tsx              Home feed
+    l/[id]/               Listing page (server-rendered metadata) and /edit
+    post/                 New listing
+    login/, auth/verify/  Magic-link sign-in
+    onboarding/           Profile setup
+    activity/             Follow-ups and ratings
+    me/                   Account: listings, profile, location
+    u/[id]/               Public profile
+    safety/, privacy/     Static pages
+  components/             Shell, cards, forms, feed, listing widgets, UI primitives
+  lib/
+    documents.ts          Every GraphQL query, mutation and fragment
+    urql.ts               Client with CSRF handling
+    server-api.ts         Public GraphQL queries from Server Components
+    image.ts, geo.ts      Photo compression; device location
+    format.ts, places.ts  Labels, currency, dates; location types
+  gql/                    Generated by codegen. Do not edit
+```
 
-| Route | |
+## How it works
+
+**Data fetching.** Client Components use urql hooks with typed documents from `src/lib/documents.ts`. Queries pause until hydration (`useIsClient`), so server rendering never makes credentialed requests. The listing page's metadata is fetched on the server with `serverQuery` over GET, which needs no cookies or CSRF token.
+
+**Auth and CSRF.** Django issues an HTTP-only session cookie. Before its first request, the urql client fetches `/api/csrf` and then echoes the `csrftoken` cookie in an `X-CSRFToken` header. [`src/proxy.ts`](src/proxy.ts) forwards `/graphql`, `/api/csrf` and `/media` to Django, so everything is same-origin. In production it also passes the visitor's IP, vouched for by `API_PROXY_SECRET`.
+
+**Cache Components.** Anything that reads request data (`params`, `useSearchParams`, `usePathname`) must sit inside `<Suspense>`, or `next build` fails. Pages follow that pattern, for example `params.then(...)` inside Suspense on dynamic routes.
+
+**Codegen loop.** When the API schema changes:
+
+```sh
+(cd ../SwapYard-server && uv run python manage.py export_schema)
+npm run codegen
+```
+
+## Design system
+
+A warm "neighborhood noticeboard" look: cream paper with a faint grain, deep forest green, and marigold accents.
+
+- **Tokens:** colors, shadows and animations are Tailwind v4 `@theme` variables in [`src/app/globals.css`](src/app/globals.css). The palettes are `leaf`, `sun`, `lagoon` and `ink`.
+- **Type:** Fraunces for display (`font-display`), Instrument Sans for text.
+- **Utilities:** `btn-primary`, `btn-secondary`, `btn-accent`, `btn-whatsapp`, `field`, `label`, `card`, `chip`, `eyebrow` and `skeleton`.
+- **Primitives:** [`src/components/ui.tsx`](src/components/ui.tsx) provides `PageHeader`, `Modal` (native `<dialog>`), `Avatar`, `Rating`, `CategoryTag`, skeletons and `RequireAuth`.
+
+## Quality bar
+
+- **Mobile first:** designed at 360–414 px. Tap targets of at least 44 px, safe-area aware bottom navigation.
+- **Low bandwidth:** client-side photo compression, lazy images, skeleton loading states.
+- **Accessible:** semantic landmarks, labelled controls, visible focus rings, alt text, reduced-motion support.
+- **Private:** no exact locations, phone numbers or emails ever reach the page.
+
+Before opening a pull request: `npm run typecheck && npm run lint && npm run build`.
+
+## Deployment
+
+### Vercel (current: https://swapyards.vercel.app)
+
+Set these environment variables in the Vercel project, for Production, then redeploy:
+
+| Variable | Value |
 |---|---|
-| `/` | Feed: category tabs, search, filters (radius, price, free only, condition), device location or neighborhood, follow-up banner |
-| `/l/[id]` | Listing. Server-rendered Open Graph tags so links preview well on WhatsApp. Chat on WhatsApp, share, report, owner actions |
-| `/post`, `/l/[id]/edit` | Listing form. Photos are compressed on the device before upload. Asks for a WhatsApp number if missing |
-| `/login`, `/auth/verify` | Magic-link sign-in |
-| `/onboarding` | Name, neighborhood, optional WhatsApp, or waitlist |
-| `/activity` | "Did this go through?" and ratings |
-| `/me` | My listings, profile, location, sign out, delete account |
-| `/u/[id]` | Public profile with ratings and badges |
-| `/safety`, `/privacy` | Safety tips, prohibited items, privacy summary |
+| `NEXT_PUBLIC_SITE_URL` | `https://swapyards.vercel.app` |
+| `API_INTERNAL_URL` | The API's public HTTPS URL, e.g. `https://api.swapyard.ng` |
+| `API_PROXY_SECRET` | Same long random value as on the API |
 
-## Production
+The API must allow this origin: on the server set `SITE_URL=https://swapyards.vercel.app` (it's also used in magic links and WhatsApp messages) and add the API's hostname to `DJANGO_ALLOWED_HOSTS`. Preview deployments use other URLs, so sign-in only works on the production URL unless you add them to `CSRF_TRUSTED_ORIGINS`.
 
-Build with `npm ci && npm run build` and run `npm start` under PM2 or systemd behind Nginx. Set `NEXT_PUBLIC_SITE_URL` to the public origin and `API_INTERNAL_URL` to Gunicorn's address.
+### Self-hosted
+
+```sh
+npm ci
+npm run build
+npm start -- -p 3000      # under PM2 or systemd
+```
+
+Run it behind Nginx; see the server README for the configuration.
+
+## Contributing
+
+1. Branch from `main`.
+2. Put new queries and mutations in `src/lib/documents.ts`, then run `npm run codegen`.
+3. Match the existing components and design tokens rather than adding one-off styles.
+4. Typecheck, lint and build before opening a pull request.

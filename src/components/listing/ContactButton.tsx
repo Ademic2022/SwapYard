@@ -52,9 +52,18 @@ export function ContactButton({
   }
 
   async function openChat() {
+    // Open the tab synchronously, inside the click: browsers block windows
+    // opened after an await. It's pointed at WhatsApp once we have the link.
+    const tab = window.open("", "_blank");
+    if (tab) tab.opener = null;
     const result = await contact({ id: listing.id });
     const url = result.data?.contactListing.whatsappUrl;
-    if (url) window.location.assign(url);
+    if (!url) {
+      tab?.close();
+      return;
+    }
+    if (tab) tab.location.href = url;
+    else window.location.assign(url); // Popup blocked: fall back to this tab.
   }
 
   async function onClick() {
@@ -79,8 +88,9 @@ export function ContactButton({
         onClose={() => setShowTips(false)}
         onContinue={async () => {
           setShowTips(false);
+          const opening = openChat(); // Starts within the click, before any await.
           await acknowledge({});
-          await openChat();
+          await opening;
         }}
       />
     </>

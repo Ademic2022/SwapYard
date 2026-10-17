@@ -18,6 +18,7 @@ type Documents = {
     "\n  fragment ListingDetailFields on Listing {\n    ...ListingCardFields\n    description\n    condition\n    priceNgn\n    isFree\n    isNegotiable\n    borrowFeePerDayNgn\n    borrowMaxDays\n    borrowDepositNgn\n    availabilityNotes\n    skillOfferType\n    skillRateNgn\n    skillRateUnit\n    skillTradeFor\n    url\n    isLive\n    isExpired\n    isHidden\n    isMine\n    expiresAt\n    updatedAt\n    owner {\n      id\n      displayName\n      photoUrl\n      locationLabel\n      ratingAvg\n      ratingCount\n      completedExchanges\n      emailVerified\n      isVerifiedNeighbor\n      joinedAt\n    }\n  }\n": typeof types.ListingDetailFieldsFragmentDoc,
     "\n  fragment MeFields on Me {\n    id\n    email\n    displayName\n    photoUrl\n    bio\n    whatsappNumber\n    isOnboarded\n    hasLocation\n    safetyTipsSeen\n    isStaff\n    joinedAt\n    ratingAvg\n    ratingCount\n    place {\n      country\n      state\n      city\n      area\n      label\n    }\n  }\n": typeof types.MeFieldsFragmentDoc,
     "\n  query Me {\n    me {\n      ...MeFields\n    }\n  }\n": typeof types.MeDocument,
+    "\n  query NigeriaStates {\n    nigeriaStates {\n      name\n      lgas\n    }\n  }\n": typeof types.NigeriaStatesDocument,
     "\n  query PlaceFacets {\n    placeFacets {\n      country\n      state\n      city\n      count\n    }\n  }\n": typeof types.PlaceFacetsDocument,
     "\n  query Feed($filters: FeedInput, $after: String) {\n    feed(filters: $filters, first: 20, after: $after) {\n      origin\n      nextCursor\n      items {\n        ...ListingCardFields\n      }\n    }\n  }\n": typeof types.FeedDocument,
     "\n  query Listing($id: ID!) {\n    listing(id: $id) {\n      ...ListingDetailFields\n    }\n  }\n": typeof types.ListingDocument,
@@ -25,8 +26,10 @@ type Documents = {
     "\n  query PublicUser($id: ID!) {\n    user(id: $id) {\n      id\n      displayName\n      photoUrl\n      bio\n      locationLabel\n      ratingAvg\n      ratingCount\n      completedExchanges\n      emailVerified\n      isVerifiedNeighbor\n      joinedAt\n      activeListings {\n        ...ListingCardFields\n      }\n      reviews {\n        id\n        rating\n        comment\n        reviewerName\n        listingTitle\n        createdAt\n      }\n    }\n  }\n": typeof types.PublicUserDocument,
     "\n  query Activity {\n    pendingFollowups {\n      id\n      listingId\n      listingTitle\n      otherUserId\n      otherUserName\n      contactedAt\n    }\n    reviewableExchanges {\n      id\n      listingId\n      listingTitle\n      otherUserId\n      otherUserName\n      iContacted\n      contactedAt\n    }\n  }\n": typeof types.ActivityDocument,
     "\n  mutation RequestMagicLink($email: String!, $next: String) {\n    requestMagicLink(email: $email, next: $next)\n  }\n": typeof types.RequestMagicLinkDocument,
+    "\n  query MagicLinkPreview($token: String!) {\n    magicLinkPreview(token: $token) {\n      email\n      isNewAccount\n    }\n  }\n": typeof types.MagicLinkPreviewDocument,
     "\n  mutation VerifyMagicLink($token: String!) {\n    verifyMagicLink(token: $token) {\n      ...MeFields\n    }\n  }\n": typeof types.VerifyMagicLinkDocument,
     "\n  mutation Logout {\n    logout\n  }\n": typeof types.LogoutDocument,
+    "\n  mutation SignOutEverywhere {\n    signOutEverywhere\n  }\n": typeof types.SignOutEverywhereDocument,
     "\n  mutation UpdateProfile($input: ProfileInput!, $photo: Upload, $removePhoto: Boolean! = false) {\n    updateProfile(input: $input, photo: $photo, removePhoto: $removePhoto) {\n      ...MeFields\n    }\n  }\n": typeof types.UpdateProfileDocument,
     "\n  mutation UpdateLocation($lat: Float!, $lng: Float!) {\n    updateLocation(lat: $lat, lng: $lng) {\n      ...MeFields\n    }\n  }\n": typeof types.UpdateLocationDocument,
     "\n  mutation ClearLocation {\n    clearLocation {\n      ...MeFields\n    }\n  }\n": typeof types.ClearLocationDocument,
@@ -47,6 +50,7 @@ const documents: Documents = {
     "\n  fragment ListingDetailFields on Listing {\n    ...ListingCardFields\n    description\n    condition\n    priceNgn\n    isFree\n    isNegotiable\n    borrowFeePerDayNgn\n    borrowMaxDays\n    borrowDepositNgn\n    availabilityNotes\n    skillOfferType\n    skillRateNgn\n    skillRateUnit\n    skillTradeFor\n    url\n    isLive\n    isExpired\n    isHidden\n    isMine\n    expiresAt\n    updatedAt\n    owner {\n      id\n      displayName\n      photoUrl\n      locationLabel\n      ratingAvg\n      ratingCount\n      completedExchanges\n      emailVerified\n      isVerifiedNeighbor\n      joinedAt\n    }\n  }\n": types.ListingDetailFieldsFragmentDoc,
     "\n  fragment MeFields on Me {\n    id\n    email\n    displayName\n    photoUrl\n    bio\n    whatsappNumber\n    isOnboarded\n    hasLocation\n    safetyTipsSeen\n    isStaff\n    joinedAt\n    ratingAvg\n    ratingCount\n    place {\n      country\n      state\n      city\n      area\n      label\n    }\n  }\n": types.MeFieldsFragmentDoc,
     "\n  query Me {\n    me {\n      ...MeFields\n    }\n  }\n": types.MeDocument,
+    "\n  query NigeriaStates {\n    nigeriaStates {\n      name\n      lgas\n    }\n  }\n": types.NigeriaStatesDocument,
     "\n  query PlaceFacets {\n    placeFacets {\n      country\n      state\n      city\n      count\n    }\n  }\n": types.PlaceFacetsDocument,
     "\n  query Feed($filters: FeedInput, $after: String) {\n    feed(filters: $filters, first: 20, after: $after) {\n      origin\n      nextCursor\n      items {\n        ...ListingCardFields\n      }\n    }\n  }\n": types.FeedDocument,
     "\n  query Listing($id: ID!) {\n    listing(id: $id) {\n      ...ListingDetailFields\n    }\n  }\n": types.ListingDocument,
@@ -54,8 +58,10 @@ const documents: Documents = {
     "\n  query PublicUser($id: ID!) {\n    user(id: $id) {\n      id\n      displayName\n      photoUrl\n      bio\n      locationLabel\n      ratingAvg\n      ratingCount\n      completedExchanges\n      emailVerified\n      isVerifiedNeighbor\n      joinedAt\n      activeListings {\n        ...ListingCardFields\n      }\n      reviews {\n        id\n        rating\n        comment\n        reviewerName\n        listingTitle\n        createdAt\n      }\n    }\n  }\n": types.PublicUserDocument,
     "\n  query Activity {\n    pendingFollowups {\n      id\n      listingId\n      listingTitle\n      otherUserId\n      otherUserName\n      contactedAt\n    }\n    reviewableExchanges {\n      id\n      listingId\n      listingTitle\n      otherUserId\n      otherUserName\n      iContacted\n      contactedAt\n    }\n  }\n": types.ActivityDocument,
     "\n  mutation RequestMagicLink($email: String!, $next: String) {\n    requestMagicLink(email: $email, next: $next)\n  }\n": types.RequestMagicLinkDocument,
+    "\n  query MagicLinkPreview($token: String!) {\n    magicLinkPreview(token: $token) {\n      email\n      isNewAccount\n    }\n  }\n": types.MagicLinkPreviewDocument,
     "\n  mutation VerifyMagicLink($token: String!) {\n    verifyMagicLink(token: $token) {\n      ...MeFields\n    }\n  }\n": types.VerifyMagicLinkDocument,
     "\n  mutation Logout {\n    logout\n  }\n": types.LogoutDocument,
+    "\n  mutation SignOutEverywhere {\n    signOutEverywhere\n  }\n": types.SignOutEverywhereDocument,
     "\n  mutation UpdateProfile($input: ProfileInput!, $photo: Upload, $removePhoto: Boolean! = false) {\n    updateProfile(input: $input, photo: $photo, removePhoto: $removePhoto) {\n      ...MeFields\n    }\n  }\n": types.UpdateProfileDocument,
     "\n  mutation UpdateLocation($lat: Float!, $lng: Float!) {\n    updateLocation(lat: $lat, lng: $lng) {\n      ...MeFields\n    }\n  }\n": types.UpdateLocationDocument,
     "\n  mutation ClearLocation {\n    clearLocation {\n      ...MeFields\n    }\n  }\n": types.ClearLocationDocument,
@@ -105,6 +111,10 @@ export function graphql(source: "\n  query Me {\n    me {\n      ...MeFields\n  
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
+export function graphql(source: "\n  query NigeriaStates {\n    nigeriaStates {\n      name\n      lgas\n    }\n  }\n"): (typeof documents)["\n  query NigeriaStates {\n    nigeriaStates {\n      name\n      lgas\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
 export function graphql(source: "\n  query PlaceFacets {\n    placeFacets {\n      country\n      state\n      city\n      count\n    }\n  }\n"): (typeof documents)["\n  query PlaceFacets {\n    placeFacets {\n      country\n      state\n      city\n      count\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
@@ -133,11 +143,19 @@ export function graphql(source: "\n  mutation RequestMagicLink($email: String!, 
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
+export function graphql(source: "\n  query MagicLinkPreview($token: String!) {\n    magicLinkPreview(token: $token) {\n      email\n      isNewAccount\n    }\n  }\n"): (typeof documents)["\n  query MagicLinkPreview($token: String!) {\n    magicLinkPreview(token: $token) {\n      email\n      isNewAccount\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
 export function graphql(source: "\n  mutation VerifyMagicLink($token: String!) {\n    verifyMagicLink(token: $token) {\n      ...MeFields\n    }\n  }\n"): (typeof documents)["\n  mutation VerifyMagicLink($token: String!) {\n    verifyMagicLink(token: $token) {\n      ...MeFields\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation Logout {\n    logout\n  }\n"): (typeof documents)["\n  mutation Logout {\n    logout\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation SignOutEverywhere {\n    signOutEverywhere\n  }\n"): (typeof documents)["\n  mutation SignOutEverywhere {\n    signOutEverywhere\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

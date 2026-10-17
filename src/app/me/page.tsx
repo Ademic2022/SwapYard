@@ -16,6 +16,7 @@ import {
   DeleteAccountMutation,
   LogoutMutation,
   MyListingsQuery,
+  SignOutEverywhereMutation,
   UpdateLocationMutation,
   UpdateProfileMutation,
 } from "@/lib/documents";
@@ -23,6 +24,9 @@ import { errorMessage } from "@/lib/errors";
 import { getDeviceLocation } from "@/lib/geo";
 import { compressImage } from "@/lib/image";
 import type { PlaceDraft } from "@/lib/places";
+
+// Location changes move the user's listings server-side; refetch cached ones.
+const MOVES_LISTINGS = { additionalTypenames: ["Listing"] };
 
 export default function MePage() {
   return (
@@ -124,6 +128,7 @@ function Settings({ me }: { me: MeFieldsFragment }) {
   const [locationState, updateLocation] = useMutation(UpdateLocationMutation);
   const [, clearLocation] = useMutation(ClearLocationMutation);
   const [, logout] = useMutation(LogoutMutation);
+  const [signOutAllState, signOutAll] = useMutation(SignOutEverywhereMutation);
   const [deleteState, deleteAccount] = useMutation(DeleteAccountMutation);
 
   const [name, setName] = useState(me.displayName);
@@ -168,13 +173,13 @@ function Settings({ me }: { me: MeFieldsFragment }) {
   async function shareLocation() {
     setLocationError(undefined);
     try {
-      const result = await updateLocation(await getDeviceLocation());
+      const result = await updateLocation(await getDeviceLocation(), MOVES_LISTINGS);
       const found = result.data?.updateLocation.place;
-      if (found) {
+      if (found && found.city) {
         setPlace({ state: found.state, city: found.city, area: found.area });
         setEditingPlace(false);
       } else if (!result.error) {
-        setLocationError("We couldn't work out your city from your location. Enter it below.");
+        setLocationError("We couldn't match your location to an LGA. Pick it below.");
         setEditingPlace(true);
       }
     } catch (e) {
@@ -184,7 +189,7 @@ function Settings({ me }: { me: MeFieldsFragment }) {
 
   async function savePlace(e: React.FormEvent) {
     e.preventDefault();
-    const result = await updateProfile({ input: { place: { country: "Nigeria", ...place } } });
+    const result = await updateProfile({ input: { place: { country: "Nigeria", ...place } } }, MOVES_LISTINGS);
     if (!result.error) setEditingPlace(false);
   }
 
@@ -192,6 +197,15 @@ function Settings({ me }: { me: MeFieldsFragment }) {
     await logout({});
     refresh();
     router.push("/");
+  }
+
+  async function signOutEverywhere() {
+    if (!window.confirm("Sign out on every phone and computer, including this one?")) return;
+    const result = await signOutAll({});
+    if (!result.error) {
+      refresh();
+      router.push("/login");
+    }
   }
 
   async function removeAccount() {
@@ -280,13 +294,14 @@ function Settings({ me }: { me: MeFieldsFragment }) {
         <p className="text-sm text-ink-500">
           {me.hasLocation
             ? "Distances are measured from your approximate spot, blurred by 100–200 m and never shown."
-            : "Share your location to see how far listings are and sort the nearest first."}
+            : "Share your location to see how far listings are and sort the nearest first."}{" "}
+          Your listings move with you when you change it.
         </p>
         {locationError && <p className="text-sm font-medium text-sun-800">{locationError}</p>}
         {editingPlace ? (
           <form onSubmit={savePlace} className="space-y-4">
             <PlaceFields value={place} onChange={setPlace} />
-            <p className="hint">Changing your state or city forgets your shared location.</p>
+            <p className="hint">Changing your state or LGA forgets your shared location.</p>
             <div className="flex gap-2">
               <button type="button" className="btn-ghost flex-1" onClick={() => setEditingPlace(false)}>
                 Cancel
@@ -302,7 +317,7 @@ function Settings({ me }: { me: MeFieldsFragment }) {
               {locationState.fetching ? "Locating…" : me.hasLocation ? "Update from my location" : "Use my location"}
             </button>
             {me.hasLocation && me.place && (
-              <button type="button" className="btn-ghost" onClick={() => clearLocation({})}>
+              <button type="button" className="btn-ghost" onClick={() => clearLocation({}, MOVES_LISTINGS)}>
                 Forget it
               </button>
             )}
@@ -315,10 +330,21 @@ function Settings({ me }: { me: MeFieldsFragment }) {
         <button type="button" className="btn-secondary w-full" onClick={signOut}>
           Sign out
         </button>
+        <button
+          type="button"
+          className="btn-secondary w-full"
+          onClick={signOutEverywhere}
+          disabled={signOutAllState.fetching}
+        >
+          Sign out of all devices
+        </button>
+        <p className="hint mt-0">
+          Use this if you signed in on a shared or lost phone. You stay signed in for 30 days after your last visit.
+        </p>
         <button type="button" className="btn-danger w-full" onClick={removeAccount} disabled={deleteState.fetching}>
           Delete my account
         </button>
-        <ErrorNote>{errorMessage(deleteState.error)}</ErrorNote>
+        <ErrorNote>{errorMessage(deleteState.error ?? signOutAllState.error)}</ErrorNote>
       </section>
       </div>
     </div>

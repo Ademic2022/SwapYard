@@ -41,7 +41,8 @@ export function Onboarding() {
     );
   }
 
-  const detected = !manual ? me.place : null;
+  // Fully detected only when the LGA matched; otherwise the user picks it.
+  const detected = !manual && me.place?.city ? me.place : null;
 
   async function locate() {
     setLocating(true);
@@ -50,11 +51,15 @@ export function Onboarding() {
       const coords = await getDeviceLocation();
       const result = await updateLocation(coords);
       const found = result.data?.updateLocation.place;
-      if (found) {
+      if (found?.city) {
         setManual(false);
+      } else if (found) {
+        setPlace({ state: found.state, city: "", area: found.area });
+        setManual(true);
+        setLocationNote(`We found you in ${found.state}. Please pick your LGA.`);
       } else if (!result.error) {
         setManual(true);
-        setLocationNote("We couldn't work out your city from your location. Please enter it below.");
+        setLocationNote("We couldn't work out where you are. Please pick your state and LGA.");
       }
     } catch (e) {
       setManual(true);
@@ -140,7 +145,7 @@ export function Onboarding() {
             <span>
               <span className="block font-bold">{locating ? "Finding you…" : "Use my current location"}</span>
               <span className="block text-xs text-ink-500">
-                We fill in your state, city and area. Your exact spot is never shown.
+                We fill in your state, LGA and area. Your exact spot is never shown.
               </span>
             </span>
           </button>

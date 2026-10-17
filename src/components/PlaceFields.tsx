@@ -1,38 +1,65 @@
 "use client";
 
-import type { PlaceDraft } from "@/lib/places";
-import { NIGERIAN_STATES } from "@/lib/places";
+import { useId } from "react";
+import { useQuery } from "urql";
 
-/** State, city/LGA and area inputs for people who type their location. */
+import { NigeriaStatesQuery } from "@/lib/documents";
+import type { PlaceDraft } from "@/lib/places";
+
+/** State, LGA and area pickers. Choosing a state loads its LGAs. */
 export function PlaceFields({ value, onChange }: { value: PlaceDraft; onChange: (value: PlaceDraft) => void }) {
-  const set = (key: keyof PlaceDraft, v: string) => onChange({ ...value, [key]: v });
+  const [{ data, fetching }] = useQuery({ query: NigeriaStatesQuery });
+  const states = data?.nigeriaStates ?? [];
+  const lgas = states.find((s) => s.name === value.state)?.lgas ?? [];
+  const id = useId();
+
   return (
     <div className="grid gap-4 sm:grid-cols-2">
-      <label className="block">
-        <span className="label">State</span>
-        <select required className="field" value={value.state} onChange={(e) => set("state", e.target.value)}>
+      <div>
+        <label htmlFor={`${id}-state`} className="label">
+          State
+        </label>
+        <select
+          id={`${id}-state`}
+          required
+          className="field"
+          value={value.state}
+          disabled={fetching && !data}
+          // A new state means a new LGA list.
+          onChange={(e) => onChange({ ...value, state: e.target.value, city: "" })}
+        >
           <option value="" disabled>
-            Choose…
+            {fetching && !data ? "Loading…" : "Choose…"}
           </option>
-          {NIGERIAN_STATES.map((state) => (
-            <option key={state} value={state}>
-              {state === "FCT" ? "FCT (Abuja)" : state}
+          {states.map((s) => (
+            <option key={s.name} value={s.name}>
+              {s.name === "FCT" ? "FCT (Abuja)" : s.name}
             </option>
           ))}
         </select>
-      </label>
-      <label className="block">
-        <span className="label">City or LGA</span>
-        <input
+      </div>
+      <div>
+        <label htmlFor={`${id}-lga`} className="label">
+          LGA
+        </label>
+        <select
+          id={`${id}-lga`}
           required
-          minLength={2}
-          maxLength={80}
           className="field"
-          placeholder="e.g. Ikeja, Eti Osa"
           value={value.city}
-          onChange={(e) => set("city", e.target.value)}
-        />
-      </label>
+          disabled={!value.state}
+          onChange={(e) => onChange({ ...value, city: e.target.value })}
+        >
+          <option value="" disabled>
+            {value.state ? "Choose…" : "Pick a state first"}
+          </option>
+          {lgas.map((lga) => (
+            <option key={lga} value={lga}>
+              {lga}
+            </option>
+          ))}
+        </select>
+      </div>
       <label className="block sm:col-span-2">
         <span className="label">
           Area <span className="font-normal text-ink-500">(optional)</span>
@@ -42,9 +69,9 @@ export function PlaceFields({ value, onChange }: { value: PlaceDraft; onChange: 
           className="field"
           placeholder="e.g. Lekki Phase 1, Akoka, Wuse 2"
           value={value.area}
-          onChange={(e) => set("area", e.target.value)}
+          onChange={(e) => onChange({ ...value, area: e.target.value })}
         />
-        <span className="hint">Your estate, street area or campus. Never your exact address.</span>
+        <span className="hint">Your estate, district or campus. Never your exact address.</span>
       </label>
     </div>
   );

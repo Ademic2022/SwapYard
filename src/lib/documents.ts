@@ -90,6 +90,15 @@ export const MeQuery = graphql(`
   }
 `);
 
+export const NigeriaStatesQuery = graphql(`
+  query NigeriaStates {
+    nigeriaStates {
+      name
+      lgas
+    }
+  }
+`);
+
 export const PlaceFacetsQuery = graphql(`
   query PlaceFacets {
     placeFacets {
@@ -190,6 +199,15 @@ export const RequestMagicLinkMutation = graphql(`
   }
 `);
 
+export const MagicLinkPreviewQuery = graphql(`
+  query MagicLinkPreview($token: String!) {
+    magicLinkPreview(token: $token) {
+      email
+      isNewAccount
+    }
+  }
+`);
+
 export const VerifyMagicLinkMutation = graphql(`
   mutation VerifyMagicLink($token: String!) {
     verifyMagicLink(token: $token) {
@@ -201,6 +219,12 @@ export const VerifyMagicLinkMutation = graphql(`
 export const LogoutMutation = graphql(`
   mutation Logout {
     logout
+  }
+`);
+
+export const SignOutEverywhereMutation = graphql(`
+  mutation SignOutEverywhere {
+    signOutEverywhere
   }
 `);
 
