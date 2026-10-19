@@ -6,7 +6,7 @@ import { Spinner } from "@/components/ui";
 
 import { LoginForm } from "./LoginForm";
 
-export const metadata: Metadata = { title: "Sign in" };
+export const metadata: Metadata = { title: "Sign in", robots: { index: false, follow: true } };
 
 export default function LoginPage() {
   return (

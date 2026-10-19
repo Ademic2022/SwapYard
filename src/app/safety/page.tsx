@@ -3,7 +3,10 @@ import type { Metadata } from "next";
 import { SafetyTipsList } from "@/components/listing/SafetyTipsModal";
 import { PageHeader } from "@/components/ui";
 
-export const metadata: Metadata = { title: "Safety tips" };
+export const metadata: Metadata = {
+  title: "Safety tips",
+  alternates: { canonical: "/safety" },
+};
 
 const PROHIBITED = [
   "Weapons, ammunition and anything designed to harm",

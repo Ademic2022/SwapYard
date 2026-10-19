@@ -42,6 +42,9 @@ export const ListingDetailFields = graphql(`
     isMine
     expiresAt
     updatedAt
+    state
+    city
+    area
     owner {
       id
       displayName
@@ -95,6 +98,15 @@ export const NigeriaStatesQuery = graphql(`
     nigeriaStates {
       name
       lgas
+    }
+  }
+`);
+
+export const ListingIndexQuery = graphql(`
+  query ListingIndex {
+    listingIndex {
+      id
+      updatedAt
     }
   }
 `);

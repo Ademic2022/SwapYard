@@ -18,9 +18,9 @@ export async function serverQuery<TData, TVars extends Record<string, unknown>>(
     variables: JSON.stringify(variables),
   });
   try {
+    // No fetch-level caching: callers that want it wrap this in "use cache".
     const response = await fetch(`${API_URL}/graphql/?${params}`, {
       headers: { Accept: "application/json" },
-      cache: "no-store",
     });
     if (!response.ok) return null;
     const body = (await response.json()) as { data?: TData; errors?: unknown[] };

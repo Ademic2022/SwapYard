@@ -7,19 +7,24 @@ import { ListingCard } from "@/components/ListingCard";
 import { ReportButton } from "@/components/listing/ReportButton";
 import { useMe } from "@/components/Providers";
 import { Avatar, ErrorNote, Rating, Spinner, VerifiedBadge } from "@/components/ui";
+import type { PublicUserQuery } from "@/gql/graphql";
 import { UserQuery } from "@/lib/documents";
 import { errorMessage } from "@/lib/errors";
 import { monthYear, timeAgo } from "@/lib/format";
 import { useIsClient } from "@/lib/use-is-client";
 
-export function UserProfile({ id }: { id: string }) {
+type Profile = NonNullable<PublicUserQuery["user"]>;
+
+/** `initial` is the server-rendered profile; the browser's query refreshes it. */
+export function UserProfile({ id, initial }: { id: string; initial: Profile | null }) {
   const isClient = useIsClient();
   const { me } = useMe();
   const [{ data, fetching, error }] = useQuery({ query: UserQuery, variables: { id }, pause: !isClient });
 
-  if (!isClient || (fetching && !data)) return <Spinner />;
-  if (error) return <ErrorNote>{errorMessage(error)}</ErrorNote>;
-  const user = data?.user;
+  const loaded = data?.user ?? initial;
+  if (!loaded && (!isClient || fetching)) return <Spinner />;
+  if (error && !loaded) return <ErrorNote>{errorMessage(error)}</ErrorNote>;
+  const user = loaded;
   if (!user) return <p className="card mx-auto max-w-md p-10 text-center">This neighbor&apos;s profile isn&apos;t available.</p>;
 
   return (

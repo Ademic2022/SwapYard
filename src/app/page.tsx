@@ -1,10 +1,13 @@
 import { Feed } from "@/components/feed/Feed";
+import { PopularPlaces } from "@/components/PopularPlaces";
+import { getNewestListings } from "@/lib/public-data";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const newest = await getNewestListings();
   return (
-    <>
-      <h1 className="sr-only">Listings near you</h1>
-      <Feed />
-    </>
+    <div className="space-y-12">
+      <Feed initialItems={newest} />
+      <PopularPlaces />
+    </div>
   );
 }

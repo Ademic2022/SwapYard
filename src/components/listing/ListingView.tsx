@@ -9,6 +9,7 @@ import { Avatar, CategoryTag, Panel, Rating, Spinner, VerifiedBadge } from "@/co
 import type { ListingDetailFieldsFragment } from "@/gql/graphql";
 import { ListingQuery } from "@/lib/documents";
 import { CONDITION_LABELS, OFFER_LABELS, monthYear, naira, timeAgo } from "@/lib/format";
+import { placePath } from "@/lib/seo";
 import { useIsClient } from "@/lib/use-is-client";
 
 import { ContactButton } from "./ContactButton";
@@ -41,12 +42,31 @@ export function ListingView({ id, initial }: { id: string; initial: Listing | nu
 
   return (
     <article className="pb-24 md:pb-0">
-      <Link
-        href="/"
-        className="mb-4 inline-flex items-center gap-1 text-sm font-semibold text-ink-500 transition hover:text-ink-900"
-      >
-        <ChevronLeftIcon className="size-4" /> All listings
-      </Link>
+      <nav aria-label="Breadcrumb" className="mb-4 text-sm text-ink-500">
+        <ol className="flex flex-wrap items-center gap-1">
+          <li className="flex items-center gap-1">
+            <Link href="/" className="inline-flex items-center gap-1 font-semibold transition hover:text-ink-900">
+              <ChevronLeftIcon className="size-4" /> All listings
+            </Link>
+          </li>
+          {listing.state && (
+            <li className="flex items-center gap-1">
+              <span aria-hidden="true">/</span>
+              <Link href={placePath(listing.state)} className="font-semibold transition hover:text-ink-900">
+                {listing.state}
+              </Link>
+            </li>
+          )}
+          {listing.state && listing.city && (
+            <li className="flex items-center gap-1">
+              <span aria-hidden="true">/</span>
+              <Link href={placePath(listing.state, listing.city)} className="font-semibold transition hover:text-ink-900">
+                {listing.city}
+              </Link>
+            </li>
+          )}
+        </ol>
+      </nav>
 
       <div className="grid gap-8 lg:grid-cols-12 lg:gap-12">
         <div className="space-y-8 lg:col-span-7">

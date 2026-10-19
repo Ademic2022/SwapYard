@@ -151,6 +151,9 @@ export function AppShell({ children }: { children: ReactNode }) {
             neighbors.
           </p>
           <div className="flex gap-6">
+            <Link href="/places" className="hover:text-ink-900">
+              Browse by area
+            </Link>
             <Link href="/safety" className="hover:text-ink-900">
               Safety
             </Link>

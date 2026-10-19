@@ -6,7 +6,7 @@ import { Spinner } from "@/components/ui";
 
 import { Onboarding } from "./Onboarding";
 
-export const metadata: Metadata = { title: "Set up your profile" };
+export const metadata: Metadata = { title: "Set up your profile", robots: { index: false, follow: false } };
 
 export default function OnboardingPage() {
   return (

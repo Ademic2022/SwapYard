@@ -8,7 +8,7 @@ import { ArrowRightIcon, FilterIcon, PinIcon, SearchIcon } from "@/components/ic
 import { ListingCard } from "@/components/ListingCard";
 import { useMe } from "@/components/Providers";
 import { CATEGORY_ICONS, ErrorNote, GridSkeleton } from "@/components/ui";
-import type { Category, FeedInput } from "@/gql/graphql";
+import type { Category, FeedInput, ListingCardFieldsFragment } from "@/gql/graphql";
 import { ActivityQuery, FeedQuery, PlaceFacetsQuery } from "@/lib/documents";
 import { errorMessage } from "@/lib/errors";
 import { getDeviceLocation, type Coords } from "@/lib/geo";
@@ -38,7 +38,12 @@ function savePrefs(prefs: Prefs) {
   } catch {}
 }
 
-export function Feed() {
+/**
+ * `initialItems` are the newest listings, rendered on the server so search engines and
+ * first-time visitors see content immediately. They stand in until the browser's own
+ * query (which may use the viewer's city or location) returns.
+ */
+export function Feed({ initialItems = [] }: { initialItems?: ListingCardFieldsFragment[] }) {
   const isClient = useIsClient();
   const { me } = useMe();
   const [category, setCategory] = useState<Category | null>(null);
@@ -105,6 +110,9 @@ export function Feed() {
   }
 
   const filterCount = activeFilterCount(filters);
+  // The unfiltered newest-first view is exactly what the server rendered.
+  const isDefaultView =
+    !category && !deferredSearch && !place.state && !place.city && !device && filterCount === 0 && filters.radiusKm === null;
   const canMeasure = device !== null || Boolean(me?.hasLocation);
   const areaLabel = place.city ? `${place.city} · ${place.state}` : place.state || "Across Nigeria";
   const greeting = me?.displayName ? `Hi ${me.displayName.split(" ")[0]}.` : "Welcome, neighbor.";
@@ -125,6 +133,10 @@ export function Feed() {
             </svg>
           </span>
         </h1>
+        <p className="mt-4 max-w-2xl text-base leading-relaxed text-ink-500 sm:text-lg">
+          SwapYard is the neighborhood marketplace for Nigeria: borrow tools, buy and sell secondhand items, and trade
+          skills with people nearby, then chat on WhatsApp.
+        </p>
 
         <div className="mt-7 flex max-w-2xl items-center gap-2 rounded-full border border-ink-200 bg-ink-50 p-1.5 pl-5 shadow-card transition focus-within:border-leaf-500 focus-within:ring-4 focus-within:ring-leaf-100">
           <SearchIcon className="shrink-0 text-ink-400" />
@@ -214,10 +226,13 @@ export function Feed() {
                 cursor={cursor}
                 isLast={index === cursors.length - 1}
                 isFirst={index === 0}
+                placeholder={index === 0 && isDefaultView ? initialItems : undefined}
                 onLoadMore={(next) => setPages({ key: inputKey, cursors: [...cursors, next] })}
               />
             ))}
           </div>
+        ) : initialItems.length > 0 ? (
+          <ListingGrid items={initialItems} />
         ) : (
           <GridSkeleton />
         )}
@@ -228,21 +243,38 @@ export function Feed() {
   );
 }
 
+function ListingGrid({ items }: { items: ListingCardFieldsFragment[] }) {
+  return (
+    <ul className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
+      {items.map((listing, index) => (
+        <li key={listing.id} className="flex">
+          <ListingCard listing={listing} index={index} badge={listing.status === "RESERVED" ? "Reserved" : undefined} />
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 function FeedPage({
   input,
   cursor,
   isFirst,
   isLast,
+  placeholder,
   onLoadMore,
 }: {
   input: FeedInput;
   cursor: string | null;
   isFirst: boolean;
   isLast: boolean;
+  /** Server-rendered listings to show while this page loads. */
+  placeholder?: ListingCardFieldsFragment[];
   onLoadMore: (cursor: string) => void;
 }) {
   const [{ data, fetching, error }] = useQuery({ query: FeedQuery, variables: { filters: input, after: cursor } });
-  if (fetching && !data) return <GridSkeleton count={isFirst ? 8 : 4} />;
+  if (fetching && !data) {
+    return placeholder?.length ? <ListingGrid items={placeholder} /> : <GridSkeleton count={isFirst ? 8 : 4} />;
+  }
   if (error) return <ErrorNote>{errorMessage(error)}</ErrorNote>;
   const feed = data?.feed;
   if (!feed) return null;
@@ -250,13 +282,7 @@ function FeedPage({
 
   return (
     <>
-      <ul className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
-        {feed.items.map((listing, index) => (
-          <li key={listing.id} className="flex">
-            <ListingCard listing={listing} index={index} badge={listing.status === "RESERVED" ? "Reserved" : undefined} />
-          </li>
-        ))}
-      </ul>
+      <ListingGrid items={feed.items} />
       {isLast && feed.nextCursor && (
         <div className="flex justify-center">
           <button type="button" className="btn-secondary px-8" onClick={() => onLoadMore(feed.nextCursor!)}>

@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 
 import { PageHeader } from "@/components/ui";
 
-export const metadata: Metadata = { title: "Privacy" };
+export const metadata: Metadata = {
+  title: "Privacy",
+  alternates: { canonical: "/privacy" },
+};
 
 // Plain-language summary. Have it reviewed against the Nigeria Data Protection
 // Act (2023) before launch.
