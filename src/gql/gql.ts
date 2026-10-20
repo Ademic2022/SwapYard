@@ -37,6 +37,7 @@ type Documents = {
     "\n  mutation AcknowledgeSafetyTips {\n    acknowledgeSafetyTips {\n      ...MeFields\n    }\n  }\n": typeof types.AcknowledgeSafetyTipsDocument,
     "\n  mutation DeleteAccount {\n    deleteAccount\n  }\n": typeof types.DeleteAccountDocument,
     "\n  mutation CreateListing($input: ListingInput!, $photos: [Upload!]!) {\n    createListing(input: $input, photos: $photos) {\n      ...ListingDetailFields\n    }\n  }\n": typeof types.CreateListingDocument,
+    "\n  mutation GenerateListingDescription($input: ListingInput!) {\n    generateListingDescription(input: $input)\n  }\n": typeof types.GenerateListingDescriptionDocument,
     "\n  mutation UpdateListing($id: ID!, $input: ListingInput!, $keepPhotoIds: [ID!], $newPhotos: [Upload!]) {\n    updateListing(id: $id, input: $input, keepPhotoIds: $keepPhotoIds, newPhotos: $newPhotos) {\n      ...ListingDetailFields\n    }\n  }\n": typeof types.UpdateListingDocument,
     "\n  mutation SetListingStatus($id: ID!, $status: ListingStatus!) {\n    setListingStatus(id: $id, status: $status) {\n      ...ListingDetailFields\n    }\n  }\n": typeof types.SetListingStatusDocument,
     "\n  mutation RenewListing($id: ID!) {\n    renewListing(id: $id) {\n      ...ListingDetailFields\n    }\n  }\n": typeof types.RenewListingDocument,
@@ -70,6 +71,7 @@ const documents: Documents = {
     "\n  mutation AcknowledgeSafetyTips {\n    acknowledgeSafetyTips {\n      ...MeFields\n    }\n  }\n": types.AcknowledgeSafetyTipsDocument,
     "\n  mutation DeleteAccount {\n    deleteAccount\n  }\n": types.DeleteAccountDocument,
     "\n  mutation CreateListing($input: ListingInput!, $photos: [Upload!]!) {\n    createListing(input: $input, photos: $photos) {\n      ...ListingDetailFields\n    }\n  }\n": types.CreateListingDocument,
+    "\n  mutation GenerateListingDescription($input: ListingInput!) {\n    generateListingDescription(input: $input)\n  }\n": types.GenerateListingDescriptionDocument,
     "\n  mutation UpdateListing($id: ID!, $input: ListingInput!, $keepPhotoIds: [ID!], $newPhotos: [Upload!]) {\n    updateListing(id: $id, input: $input, keepPhotoIds: $keepPhotoIds, newPhotos: $newPhotos) {\n      ...ListingDetailFields\n    }\n  }\n": types.UpdateListingDocument,
     "\n  mutation SetListingStatus($id: ID!, $status: ListingStatus!) {\n    setListingStatus(id: $id, status: $status) {\n      ...ListingDetailFields\n    }\n  }\n": types.SetListingStatusDocument,
     "\n  mutation RenewListing($id: ID!) {\n    renewListing(id: $id) {\n      ...ListingDetailFields\n    }\n  }\n": types.RenewListingDocument,
@@ -186,6 +188,10 @@ export function graphql(source: "\n  mutation DeleteAccount {\n    deleteAccount
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation CreateListing($input: ListingInput!, $photos: [Upload!]!) {\n    createListing(input: $input, photos: $photos) {\n      ...ListingDetailFields\n    }\n  }\n"): (typeof documents)["\n  mutation CreateListing($input: ListingInput!, $photos: [Upload!]!) {\n    createListing(input: $input, photos: $photos) {\n      ...ListingDetailFields\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation GenerateListingDescription($input: ListingInput!) {\n    generateListingDescription(input: $input)\n  }\n"): (typeof documents)["\n  mutation GenerateListingDescription($input: ListingInput!) {\n    generateListingDescription(input: $input)\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

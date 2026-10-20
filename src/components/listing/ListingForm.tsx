@@ -15,7 +15,12 @@ import type {
   ListingInput,
   SkillOfferType,
 } from "@/gql/graphql";
-import { CreateListingMutation, UpdateListingMutation, UpdateProfileMutation } from "@/lib/documents";
+import {
+  CreateListingMutation,
+  GenerateListingDescriptionMutation,
+  UpdateListingMutation,
+  UpdateProfileMutation,
+} from "@/lib/documents";
 import { errorMessage } from "@/lib/errors";
 import { CATEGORY_LABELS, CONDITION_LABELS, OFFER_LABELS } from "@/lib/format";
 import { compressImage } from "@/lib/image";
@@ -107,6 +112,7 @@ export function ListingForm({ existing }: { existing?: ListingDetailFieldsFragme
   const [createState, create] = useMutation(CreateListingMutation);
   const [updateState, update] = useMutation(UpdateListingMutation);
   const [profileState, updateProfile] = useMutation(UpdateProfileMutation);
+  const [describeState, describe] = useMutation(GenerateListingDescriptionMutation);
 
   const needsWhatsapp = !me?.whatsappNumber;
   const busy = processing || createState.fetching || updateState.fetching || profileState.fetching;
@@ -140,6 +146,12 @@ export function ListingForm({ existing }: { existing?: ListingDetailFieldsFragme
     if (files.length > room) setPhotoError(`You can add up to ${MAX_PHOTOS} photos.`);
     setPhotos((current) => [...current, ...added]);
     setProcessing(false);
+  }
+
+  async function writeDescription() {
+    // Whatever is already typed is sent as notes for the draft to build on.
+    const result = await describe({ input: toInput(form) });
+    if (result.data) set("description", result.data.generateListingDescription);
   }
 
   async function submit(e: React.FormEvent) {
@@ -272,7 +284,18 @@ export function ListingForm({ existing }: { existing?: ListingDetailFieldsFragme
             </label>
 
             <label className="block">
-              <span className="label">Description</span>
+              <span className="flex items-center justify-between gap-3">
+                <span className="label">Description</span>
+                <button
+                  type="button"
+                  onClick={writeDescription}
+                  disabled={describeState.fetching || form.title.trim().length < 3}
+                  title={form.title.trim().length < 3 ? "Add a title first" : undefined}
+                  className="mb-2 text-sm font-semibold text-leaf-700 hover:underline disabled:cursor-not-allowed disabled:text-ink-400 disabled:no-underline"
+                >
+                  {describeState.fetching ? "Writing…" : form.description.trim() ? "Rewrite it for me" : "Write it for me"}
+                </button>
+              </span>
               <textarea
                 required
                 minLength={10}
@@ -286,6 +309,9 @@ export function ListingForm({ existing }: { existing?: ListingDetailFieldsFragme
                 value={form.description}
                 onChange={(e) => set("description", e.target.value)}
               />
+              {describeState.error && (
+                <p className="mt-1 text-sm font-medium text-red-700">{errorMessage(describeState.error)}</p>
+              )}
               <span className="hint text-right">{form.description.length}/2000</span>
             </label>
 

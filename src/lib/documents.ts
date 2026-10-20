@@ -286,6 +286,12 @@ export const CreateListingMutation = graphql(`
   }
 `);
 
+export const GenerateListingDescriptionMutation = graphql(`
+  mutation GenerateListingDescription($input: ListingInput!) {
+    generateListingDescription(input: $input)
+  }
+`);
+
 export const UpdateListingMutation = graphql(`
   mutation UpdateListing($id: ID!, $input: ListingInput!, $keepPhotoIds: [ID!], $newPhotos: [Upload!]) {
     updateListing(id: $id, input: $input, keepPhotoIds: $keepPhotoIds, newPhotos: $newPhotos) {
